@@ -39,45 +39,40 @@ def req(term,lang="en"):
 
 
 
+
 # Gets summary
 def getSummary(term,lang="en"):
     final_content = []
     content = req(term,lang)
     soup = BeautifulSoup(content,'html.parser')
-    n_links = []
-    for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
-        n_links.append(link.get('href'))
     content = soup.find_all('p')
-    # prints the title in the center
+    n_links = []
     print('\n'+(color.BOLD+str(term)).center(width,"-")+ "\n"+color.END) 
     for i in content:
-        # Removing all empty lines
         if i.get_text() == "\n": continue
         else:
-            # Removing all external links from the article
             if i('sup'):
-                for tag in i('sup'): 
-                    tag.decompose() 
+                for tag in i('sup'): tag.decompose() 
             data = i.get_text()
             final_content.append(data)
-            if len(final_content) == 3: break # Breaks after 3 line of content
+            if len(final_content) == 3: break 
+    if "may refer to:" in str(i):
+        print("Did You Mean: ")
+        term = searchInfo(term)
+    else:
+        print(color.BLUE) 
+        print(*final_content,sep = '\n\n')
+        print(color.END)
+        for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
+            n_links.append(link.get('href'))
+        print('\n'+(color.BOLD+'Credible References Used').center(width,"-")+ "\n"+color.END)
+        print(n_links)
+        print("\n")
     with open('OUTPUT.txt', 'w') as f:
         for j in final_content:
             f.write(str(j) + "\n")
         for n in n_links:
             f.write(str(n)+ "\n")
-    # Search for other if not available
-    if "may refer to:" in str(i):
-        print("Did You Mean: ")
-        term = searchInfo(term)
-    else:
-        #print(colors[random.randrange(len(colors)-1)]) 
-        print(color.BLUE) 
-        print(*final_content,sep = '\n\n')
-        print(color.END)
-    print('\n'+(color.BOLD+'Credible References Used').center(width,"-")+ "\n"+color.END)
-    print(n_links)
-    print("\n")
 
 
 
@@ -86,7 +81,6 @@ def getInfo(term,lang="en"):
     content = req(term,lang)
     soup = BeautifulSoup(content,'html.parser')
     content = []
-    # Seprating Titles from the paragraphs
     for a in soup.find_all(['p','span']):
         try:
             if a['class'] and 'mw-headline' in a['class']:
@@ -94,20 +88,15 @@ def getInfo(term,lang="en"):
         except KeyError:
             if a.name == 'p':
                 content.append(a)
-
-    # Remove all external links
     for i in content:
         if i('sup'):
             for tag in i('sup'): 
-                tag.decompose()
-        # Getting data    
+                tag.decompose()   
         data = i.get_text()
         if i.name == 'span': 
-            final_content.append('!'+str(data)) # Seprating titles
+            final_content.append('!'+str(data))
         else: final_content.append(data)
-    # Search if not found
     if "may refer to:" in str(final_content[0]): term = searchInfo(term)
-    # Printing the output
     else:
         if p == True: 
             print('\n'+(color.BOLD+str(term)).center(width,"-")+color.END+'\n')

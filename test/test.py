@@ -7,4 +7,4 @@ def getSummary(self):
     result = info.getSummary(self)
     print(result)
 
-getSummary('Linux')
+#getSummary('Linux')
